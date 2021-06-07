@@ -1,6 +1,7 @@
 :- module(
        chave,
-       [ pk/2,
+       [ carrega_tab/1,
+         pk/2,
          inicia_pk/2 ]
    ).
 
@@ -10,11 +11,13 @@
    chave( nome:atom,
           valor:positive_integer ).
 
-:- initialization( ( db_attach('./backend/bd/tbl_chave.pl', []),
-                     at_halt(db_sync(gc(always))) ) ).
+:- initialization( at_halt(db_sync(gc(always))) ).
+
+carrega_tab(ArqTabela):-
+    db_attach(ArqTabela, []).
 
 
-pk(Nome, Valor):-
+pk(Nome, Valor):- !,
     atom_concat(pk, Nome, Mutex),
     with_mutex(Mutex,
                (
@@ -28,7 +31,7 @@ pk(Nome, Valor):-
 
 % Talvez você queira um valor inicial diferente de 1
 
-inicia_pk(Nome, ValorInicial):-
+inicia_pk(Nome, ValorInicial):- !,
     atom_concat(pk, Nome, Mutex),
     with_mutex(Mutex,
                ( chave(Nome, _) ->

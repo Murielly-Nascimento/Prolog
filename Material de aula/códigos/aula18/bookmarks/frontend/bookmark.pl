@@ -3,69 +3,78 @@
 /* html_requires  */
 :- use_module(library(http/html_head)).
 
-:- ensure_loaded(gabarito(bootstrap)).
+:- ensure_loaded(gabarito(boot5rest)).
 
-:- use_module(bd(bookmark)).
 
+/* Página de cadastro de bookmark */
 cadastro(_Pedido):-
     reply_html_page(
-        bootstrap,
+        boot5rest,
         [ title('Bookmarks')],
         [ div(class(container),
-              [ \html_requires(css('all.min.css')),
-                \html_requires(js('rest.js')),
-                \html_requires(js('bookmark.js')),
+              [ \html_requires(js('bookmark.js')),
                 h1('Meus bookmarks'),
                 \form_bookmark
               ]) ]).
 
 form_bookmark -->
     html(form([ id('bookmark-form'),
-                onsubmit("redirecionaResposta(event, '/')"),
-                action('/api/v1/bookmarks/'), method('POST') ],
-              [ \campo(titulo, 'Título', text),
+                onsubmit("redirecionaResposta( event, '/' )"),
+                action('/api/v1/bookmarks/') ],
+              [ \método_de_envio('POST'),
+                \campo(título, 'Título', text),
                 \campo(url, 'URL', url),
-                button([type(submit), class('btn btn-primary')], 'Enviar')
-             ])).
+                \enviar_ou_cancelar('/')
+              ])).
+
+
+enviar_ou_cancelar(RotaDeRetorno) -->
+    html(div([ class('btn-group'), role(group), 'aria-label'('Enviar ou cancelar')],
+             [ button([ type(submit),
+                        class('btn btn-outline-primary')], 'Enviar'),
+               a([ href(RotaDeRetorno),
+                   class('ms-3 btn btn-outline-danger')], 'Cancelar')
+            ])).
+
 
 
 campo(Nome, Rótulo, Tipo) -->
     html(div(class('mb-3'),
-             [ label([for(Nome), class('form-label')], Rótulo),
-               input([type(Tipo), class('form-control'), id(Nome), name(Nome)])
+             [ label([ for(Nome), class('form-label') ], Rótulo),
+               input([ type(Tipo), class('form-control'),
+                       id(Nome), name(Nome)])
              ] )).
 
 
-/* Alterar  */
+
+/* Página para edição (alteração) de um bookmark  */
 
 editar(AtomId, _Pedido):-
     atom_number(AtomId, Id),
     ( bookmark:bookmark(Id, Título, URL)
     ->
-               reply_html_page(
-                   bootstrap,
-                   [ title('Bookmarks')],
-                   [ div(class(container),
-                         [ \html_requires(css('all.min.css')),
-                           \html_requires(js('rest.js')),
-                           \html_requires(js('bookmark.js')),
-                           h1('Meus bookmarks'),
-                           \form_bookmark(Id, Título, URL)
-                         ]) ])
+    reply_html_page(
+        boot5rest,
+        [ title('Bookmarks')],
+        [ div(class(container),
+              [ \html_requires(js('bookmark.js')),
+                h1('Meus bookmarks'),
+                \form_bookmark(Id, Título, URL)
+              ]) ])
     ; throw(http_reply(not_found(Id)))
     ).
 
 
 form_bookmark(Id, Título, URL) -->
     html(form([ id('bookmark-form'),
-                onsubmit("redirecionaResposta(event, '/')"),
-                action('/api/v1/bookmarks/~w' - Id), method('POST') ],
-              [ \método_envio('PUT'),
+                onsubmit("redirecionaResposta( event, '/' )"),
+                action('/api/v1/bookmarks/~w' - Id) ],
+              [ \método_de_envio('PUT'),
                 \campo_não_editável(id, 'Id', text, Id),
-                \campo(titulo, 'Título', text, Título),
-                \campo(url, 'URL', url, URL),
-                button([type(submit), class('btn btn-primary')], 'Enviar')
-             ])).
+                \campo(título, 'Título', text, Título),
+                \campo(url,    'URL',    url,  URL),
+                \enviar_ou_cancelar('/')
+              ])).
 
 
 campo(Nome, Rótulo, Tipo, Valor) -->
@@ -76,12 +85,14 @@ campo(Nome, Rótulo, Tipo, Valor) -->
              ] )).
 
 campo_não_editável(Nome, Rótulo, Tipo, Valor) -->
-    html(div(class('mb-3'),
+    html(div(class('mb-3 w-25'),
              [ label([ for(Nome), class('form-label')], Rótulo),
                input([ type(Tipo), class('form-control'),
-                       id(Nome), name(Nome), value(Valor),
+                       id(Nome),
+                       % name(Nome),%  não é para enviar o id
+                       value(Valor),
                        readonly ])
              ] )).
 
-método_envio(Método) -->
+método_de_envio(Método) -->
     html(input([type(hidden), name('_método'), value(Método)])).
