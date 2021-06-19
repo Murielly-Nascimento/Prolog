@@ -1,0 +1,9 @@
+created(1623886179.4082832).
+assert(chave(funcionario,3)).
+assert(chave(usuário,10)).
+assert(chave(instituicao,14)).
+assert(chave(autor,5)).
+assert(chave(orientador,4)).
+assert(chave(curso,19)).
+assert(chave(palavraChave,7)).
+assert(chave(monografia,22)).
